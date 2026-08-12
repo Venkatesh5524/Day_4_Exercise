@@ -1,53 +1,30 @@
-﻿namespace A03;
-
-class Program
-{
-    static void Main(string[] args)
-    {
-      char[] letters = new char[] { 'U', 'X', 'A', 'L', 'T', 'N', 'E' };
-      string[] words = File.ReadAllLines ("words.txt");
-      Dictionary<string, int> result = new Dictionary<string, int> ();
-      foreach (string word in words)
-         if (Is_Valid (word) == true)
-            result[word] = Score (word);
-
-      var sorted_result = result.OrderByDescending (x => x.Value).ThenBy (x => x.Key);
-      int total = 0;
-      foreach (var ans in sorted_result) {
-         if (Panagram (ans.Key) == true) Console.ForegroundColor = ConsoleColor.Green;
-         else Console.ResetColor ();
-         total += ans.Value;
-         Console.WriteLine ($"{ans.Value,3}: {ans.Key}");
-      }
-      Console.WriteLine ("----");
-      Console.WriteLine ($"{total,3}: Total");
-
-      bool Is_Valid (string word) {
-         if (word.Length < 4) return false;
-         if (!word.Contains (letters[0])) return false;
-         foreach (char h in word) {
-            if (!letters.Contains (h)) return false;
+﻿using static System.Console;
+class Program {
+   static void Main () {
+      int low = 1, high = 100, guess, attempts = 0;
+      Write ($"Think of a number between {low} and {high}: \nPress enter when you are ready");
+      while (ReadKey (true).Key != ConsoleKey.Enter) ;
+      ConsoleKey response;
+      while (low <= high) {
+         guess = (low + high) / 2;
+         Write ($"\nIs your number {guess} (Y)es (H)igh (L)ow: ");
+         response = IsVaildGuess ();
+         attempts++;
+         WriteLine (response == ConsoleKey.Y ? "Yes" : response == ConsoleKey.L ? "Low" : "High");
+         switch (response) {
+            case ConsoleKey.Y:
+               WriteLine ($"I guessed the number in {attempts} attempts.");
+               return;
+            case ConsoleKey.L:
+               low = guess + 1; break;
+            default:
+               high = guess - 1; break;
          }
-         return true;
       }
-
-      int Score (string word) {
-         int temp = 0;
-         int len = word.Length;
-         if (len == 4) temp++;
-         else if (len > 4 && len < 7) temp += len;
-         else if (len >= 7) {
-            if (Panagram (word)) {
-               temp = temp + len + 7;
-            } else temp += len;
-         }
-         return temp;
-      }
-
-      bool Panagram (string word) {
-         foreach (char ch in letters)
-            if (!word.Contains (ch)) return false;
-         return true;
+      static ConsoleKey IsVaildGuess () {
+         ConsoleKey key;
+         while (!((key = ReadKey(true).Key) is ConsoleKey.Y or ConsoleKey.L or ConsoleKey.H)) ;
+         return key;
       }
    }
 }
