@@ -6,7 +6,7 @@ class Program () {
       for (; ; ) {
          Console.Write ("> ");
          string input = Console.ReadLine ();
-         if (input == null || input == "exit") break;
+         if (input == null || input == "") break;
          try {
             Console.ForegroundColor = ConsoleColor.Yellow;
             string result = evaluate.Evaluate (input.Trim().ToLower());
