@@ -9,8 +9,8 @@ class Program () {
          if (input == null || input == "") break;
          try {
             Console.ForegroundColor = ConsoleColor.Yellow;
-            string result = evaluate.Evaluate (input.Trim().ToLower());
-            Console.WriteLine (result);
+            double result = evaluate.Evaluate (input.Trim().ToLower());
+            Console.WriteLine (Math.Round(result, 10));
          }
          catch (Exception e) {
             Console.ForegroundColor = ConsoleColor.Red;

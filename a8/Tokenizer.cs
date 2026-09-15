@@ -1,11 +1,13 @@
 ﻿namespace Eval;
 
 class Tokenizer {
-   public Tokenizer (string input) {
+   public Tokenizer (Evaluator eval,string input) {
       mText = input;
       mN = 0;
+      mEval = eval;
    }
    readonly string mText;
+   readonly Evaluator mEval;
    int mN;
 
    public Token GetNext () {
@@ -16,7 +18,7 @@ class Tokenizer {
          if (c is >= '0' and <= '9') return GetLiteral ();
          if (c is '(' or ')') return new TPunctuation (c);
          if (c is >= 'a' and <= 'z') return GetIdentifier ();
-         return new TError ();
+         return new TError ($"Unexpected character {c}");
       }
       return new TEnd ();
    }
@@ -40,7 +42,7 @@ class Tokenizer {
       }
       string identifier = mText.Substring (start, mN - start);
       if (mFuncs.Contains (identifier)) return new TOpFunc (identifier);
-      else return new TVariable (identifier);
+      else return new TVariable (mEval, identifier);
    }
    readonly string[] mFuncs = { "sin", "cos", "tan", "sqrt", "log", "exp", "asin", "acos", "atan" };
 }
