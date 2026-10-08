@@ -72,8 +72,7 @@ class Program {
          }
          if (expoDigits == 0) return double.NaN;
          double power = Math.Pow (10, expo);
-         if(expoSign == 1) result *= power;
-         else result /= power;
+         result = expoSign == 1 ? result * power : result / power;
       }
       if (index < len) return double.NaN;
       result *= sign;
