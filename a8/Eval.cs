@@ -12,7 +12,8 @@ class Evaluator () {
          if (token is TEnd) break;
          tokens.Add (token);
       }
-      TVariable var = null;
+      // Check if this is a variable assignment
+      TVariable? var = null;
       if (tokens.Count > 1 && tokens[0] is TVariable tvar && tokens[1] is TOpBinary bin && bin.Op == '=') {
          var = tvar;
          tokens.RemoveRange (0, 2);
@@ -55,7 +56,7 @@ class Evaluator () {
             if (p.Punct == '(') mBasePriority += 10;
             else if(p.Punct == ')') mBasePriority -= 10;
             break;
-         default: throw new NotImplementedException ();
+         default: Error($"Unknown token: {token}"); break;
       }
    }
    int mBasePriority = 0;

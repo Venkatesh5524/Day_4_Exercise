@@ -4,12 +4,12 @@ namespace Eval;
 
 class Token { }
 
-class TNumber : Token {
-   public virtual double Value {  get;}
+abstract class TNumber : Token {
+   public abstract double Value {  get;}
 }
 
-class TOperator : Token {
-   public virtual int Priority { get;}
+abstract class TOperator : Token {
+   public abstract int Priority { get;}
    public  int FinalPriority { get;  set;}
 }
 class TLiteral : TNumber {

@@ -5,12 +5,12 @@ class Program () {
       var evaluate = new Evaluator ();
       for (; ; ) {
          Console.Write ("> ");
-         string input = Console.ReadLine ();
+         string input = Console.ReadLine () ??"";
          if (input == null || input == "") break;
          try {
             Console.ForegroundColor = ConsoleColor.Yellow;
-            double result = evaluate.Evaluate (input.Trim().ToLower());
-            Console.WriteLine (Math.Round(result, 10));
+            double result = evaluate.Evaluate (input);
+            Console.WriteLine (result);
          }
          catch (Exception e) {
             Console.ForegroundColor = ConsoleColor.Red;
