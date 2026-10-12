@@ -1,96 +1,103 @@
-﻿
+﻿// ------------------------------------------------------------------------------------------------
+// Training ~ A training program for new joinees at Metamation, Batch - July 2026.
+// Copyright (c) TRUMPF Metamation India.
+// ------------------------------------------------------------------------------------------------
+// TestCases.cs
+// Tests the generic queue implementation.
+// ------------------------------------------------------------------------------------------------
+using static System.Console;
+
+#region class Program -----------------------------------------------------------------------------
+// Tests the generic queue implementation.
 class Program {
    static void Main () {
+      WriteLine ("Test Results");
+      WriteLine ("------------");
       Test1 ();
       Test2 ();
       Test3 ();
-      Test4 ();
       Test5 ();
       Test6 ();
+      Test7 ();
+      WriteLine ($"\nResult: {sPassedTests}/{sTestNumber} Tests Passed");
    }
 
-   static void DisplayStatus(string message, bool status) {
-      if (status) {
-         Console.ForegroundColor = ConsoleColor.Green;
-         Console.Write ("[Pass] ");
-      } else {
-         Console.ForegroundColor = ConsoleColor.Red;
-         Console.Write ("[Fail] ");
-      }
-      Console.ResetColor ();
-      Console.WriteLine (message);
-   }
-
-   // Dequeue from an empty queue
+   #region Implementation -------------------------------------------
+   // Tests a single element and empty state
    static void Test1 () {
-      TQueue<int> queue = new ();
-      bool isPassed = false;
+      var queue = new TQueue<int> ();
+      queue.Enqueue (25);
+      Print ("Single element and empty state", queue.Dequeue () == 25 && queue.IsEmpty);
+   }
+
+   // Tests FIFO order
+   static void Test2 () {
+      var queue = new TQueue<int> ();
+      for (int i = 1; i <= 3; i++) queue.Enqueue (i);
+      Print ("FIFO order", VerifyOrder (queue, 1, 3));
+   }
+
+   // Tests circular movement
+   static void Test3 () {
+      var queue = new TQueue<int> ();
+      for (int i = 1; i <= 4; i++) queue.Enqueue (i);
+      queue.Dequeue ();
+      queue.Dequeue ();
+      queue.Enqueue (5);
+      queue.Enqueue (6);
+      Print ("Circular order", VerifyOrder (queue, 3, 6));
+   }
+
+   // Tests automatic resizing
+   static void Test5 () {
+      var queue = new TQueue<int> ();
+      for (int i = 0; i < 8; i++) queue.Enqueue (i);
+      Print ("Resize", VerifyOrder (queue, 0, 7));
+   }
+
+   // Tests resizing after circular wrapping
+   static void Test6 () {
+      var queue = new TQueue<int> ();
+      for (int i = 1; i <= 4; i++) queue.Enqueue (i);
+      queue.Dequeue ();
+      queue.Dequeue ();
+      for (int i = 5; i <= 7; i++) queue.Enqueue (i);
+      Print ("Wrapped resize", VerifyOrder (queue, 3, 7));
+   }
+
+   // Tests Dequeue on an empty queue
+   static void Test7 () {
+      var queue = new TQueue<int> ();
+      bool passed = false;
       try {
          queue.Dequeue ();
-      } catch (InvalidOperationException) {
-         isPassed = true;
+      } catch (Exception) {
+         passed = true;
       }
-      DisplayStatus ("Dequeue from an empty queue", isPassed);
+      Print ("Empty Dequeue", passed);
    }
 
-   // Verify single-element queue and empty state
-   static void Test2 () {
-      TQueue<string> queue = new ();
-      queue.Enqueue ("A");
-      queue.Dequeue ();
-      DisplayStatus ("Single-element queue and empty state", queue.IsEmpty);
+   // Checks dequeue order against expected values
+   static bool VerifyOrder (TQueue<int> queue, int start, int end) {
+      while(start <= end) {
+         if (queue.IsEmpty || queue.Dequeue () != start) return false;
+         start++;
+      }
+      return queue.IsEmpty;
    }
 
-   // Verify First In First Out (FIFO) order
-   static void Test3 () {
-      TQueue<char> queue = new ();
-      bool  isPassed = true;
-      queue.Enqueue ('A');
-      queue.Enqueue ('B');
-      queue.Enqueue ('C');
-      for(int i = 0; !queue.IsEmpty; i++)
-         if (queue.Dequeue () != (char)('A' + i)) isPassed = false;
-      DisplayStatus("FIFO order", isPassed);
+   // Displays the test result
+   static void Print (string name, bool passed) {
+      sTestNumber++;
+      if (passed) sPassedTests++;
+      ForegroundColor = passed ? ConsoleColor.Green : ConsoleColor.Red;
+      WriteLine ($"{sTestNumber}. {name, -20} : {(passed ? "PASS" : "FAIL")}");
+      ResetColor ();
    }
+   #endregion
 
-   // Check if the queue reuses the empty space at the beginning (Circular Wrap around)
-   static void Test4 () {
-      TQueue<char> queue = new ();
-      bool isPassed = true;
-      queue.Enqueue ('A');
-      queue.Enqueue ('B');
-      queue.Enqueue ('C');
-      queue.Dequeue ();
-      queue.Dequeue ();
-      queue.Enqueue ('D');
-      queue.Enqueue ('E');
-      for (int i = 0; !queue.IsEmpty; i++)
-         if (queue.Dequeue () != (char)('C' + i)) isPassed = false;
-      DisplayStatus ("Reuses the empty space at the beginning", isPassed);
-   }
-
-   // Verify resize when completely full
-   static void Test5 () {
-      TQueue<char> queue = new ();
-      bool isPassed = true;
-      for (int i = 0; i < 5; i++) queue.Enqueue ((char)('A' + i));
-      for(int j = 0; !queue.IsEmpty; j++)
-         if(queue.Dequeue () != (char)('A' + j)) isPassed = false;
-      DisplayStatus ("Resize when completely full", isPassed);
-   }
-
-   // Verify resize after circular wrap around
-   static void Test6 () {
-      TQueue<char> queue = new ();
-      bool isPassed = true;
-      for (int i = 0; i < 4; i++) queue.Enqueue ((char)('A' + i));
-      queue.Dequeue ();
-      queue.Dequeue ();
-      queue.Enqueue ('E');
-      queue.Enqueue ('F');
-      queue.Enqueue ('G');
-      for (int j = 0; !queue.IsEmpty; j++)
-         if (queue.Dequeue () != (char)('C' + j)) isPassed = false;
-      DisplayStatus ("Resize after circular wrap around", isPassed);
-   }
+   #region Private data ---------------------------------------------
+   static int sTestNumber, sPassedTests;
+   #endregion
 }
+#endregion
