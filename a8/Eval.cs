@@ -1,7 +1,5 @@
 ﻿namespace Eval;
-class EvalException : Exception {
-   public EvalException (string message) : base (message) { }
-}
+class EvalException (string message) : Exception(message) { }
 class Evaluator () {
    public double Evaluate(string input) {
       Reset();
@@ -10,6 +8,7 @@ class Evaluator () {
       for(; ; ) {
          var token = tokenizer.GetNext ();
          if (token is TEnd) break;
+         if (token is TError err) throw new EvalException (err.Message);
          tokens.Add (token);
       }
       // Check if this is a variable assignment
