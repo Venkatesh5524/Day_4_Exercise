@@ -1,51 +1,41 @@
-﻿namespace A03;
+﻿// ------------------------------------------------------------------------------------------------
+// Training ~ A training program for new joinees at Metamation, Batch- July 2026.
+// Copyright (c) Trumpf Metamation India.
+// ------------------------------------------------------------------------------------------------
+// Program.cs
+// Program to find valid words from a given set of letters and
+// calculate their scores based on specific rules.
+// ------------------------------------------------------------------------------------------------
+using static System.Console;
 
 class Program {
-   static void Main (string[] args) {
-      char[] letters = new char[] { 'U', 'X', 'A', 'L', 'T', 'N', 'E' };
-      string[] words = File.ReadAllLines ("words.txt");
-      Dictionary<string, int> result = new Dictionary<string, int> ();
-      foreach (string word in words)
-         if (Is_Valid (word) == true)
-            result[word] = Score (word);
-
-      var sorted_result = result.OrderByDescending (x => x.Value).ThenBy (x => x.Key);
-      int total = 0;
-      foreach (var ans in sorted_result) {
-         if (Panagram (ans.Key) == true) Console.ForegroundColor = ConsoleColor.Green;
-         else Console.ResetColor ();
-         total += ans.Value;
-         Console.WriteLine ($"{ans.Value,3}: {ans.Key}");
+   static void Main () {
+      const int PANGRAMBONUS = 7, MINLENGTH = 4;
+      char[] letters = ['U', 'X', 'A', 'L', 'T', 'N', 'E'];
+      Dictionary<string, (int Score, bool IsPangram)> result = [];
+      foreach (string word in File.ReadLines ("words.txt"))
+         if (IsValid (word)) result[word] = GetScoreandPangramStatus (word);
+      ConsoleColor previousColor = ForegroundColor;
+      foreach (var ans in result.OrderByDescending (x => x.Value.Score).ThenBy (x => x.Key)) {
+         var (Score, IsPangram) = ans.Value;
+         if (IsPangram) ForegroundColor = ConsoleColor.Green;
+         WriteLine ($"{Score, 3} {ans.Key}");
+         // Restores the foreground color only if it was changed.
+         if (ForegroundColor != previousColor) ForegroundColor = previousColor;
       }
-      Console.WriteLine ("----");
-      Console.WriteLine ($"{total,3}: Total");
+      WriteLine ("----");
+      WriteLine ($"{result.Sum (x => x.Value.Score), 3} Total");
 
-      bool Is_Valid (string word) {
-         if (word.Length < 4) return false;
-         if (!word.Contains (letters[0])) return false;
-         foreach (char h in word) {
-            if (!letters.Contains (h)) return false;
-         }
-         return true;
-      }
+      // Checks validity of the word
+      bool IsValid (string word)
+         => word.Length >= MINLENGTH && word.Contains (letters[0]) && word.All (letters.Contains);
 
-      int Score (string word) {
-         int temp = 0;
-         int len = word.Length;
-         if (len == 4) temp++;
-         else if (len > 4 && len < 7) temp += len;
-         else if (len >= 7) {
-            if (Panagram (word)) {
-               temp = temp + len + 7;
-            } else temp += len;
-         }
-         return temp;
-      }
-
-      bool Panagram (string word) {
-         foreach (char ch in letters)
-            if (!word.Contains (ch)) return false;
-         return true;
+      // Calculates the score of the word and determines whether it is a pangram.
+      (int, bool) GetScoreandPangramStatus (string word) {
+         bool isPangram = letters.All (word.Contains);
+         int length = word.Length;
+         int score = length == MINLENGTH ? 1 : (isPangram ? length + PANGRAMBONUS : length);
+         return (score, isPangram);
       }
    }
 }
