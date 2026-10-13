@@ -11,17 +11,26 @@ using static System.Console;
 #region Program -----------------------------------------------------------------------------------
 class Program {
    static void Main () {
-      string[] testCases = ["10.54e23.4e3", "-1.546234e-4", "0", "0.0", "12345", "0.00000325",
+      string[] testCases = ["10.54e23.4e3", "-1.54234e-4", "0", "0.0", "12345", "0.00000325",
          "10.54e2", "1.5e2.5", "1.e3", "1.e+3", "12.54e3.", "12.", "12.e1", ".325", " +625 ",
          "6.25e0", "6.0e0", "6.25e-1", "+6.25e1", "*6.25", "10.625","15a1", "1.567*2", "+-12",
-         "12.-5", ".e1", "-0.325", "  12.456    ", "12e1000", "-4.231", "e5"];
-      WriteLine ($"{"Input",15} {"CustomValue",30} {"Original Value",30}");
+         "12.-5", ".e1", "-0.325", "  12.456    ", "12e1000", "-4.231", "e5","-9e5", "13.24"];
+      WriteLine ($"{"Input",15} {"CustomValue",30} {"Original Value",30} {"Status", 30}");
       foreach (string testCase in testCases) {
          double customValue = DoubleParse (testCase);
          double originalValue = double.TryParse (testCase, out double val) ? val : double.NaN;
          Write ($"{testCase,15}");
          Write ($"{customValue,30}");
-         WriteLine ($"{originalValue,30}");
+         Write ($"{originalValue,30}");
+         bool iPass = Math.Abs (customValue - originalValue) <= 1e-6 || (double.IsNaN(customValue) && double.IsNaN(originalValue));
+         if( iPass) {
+            ForegroundColor = ConsoleColor.Green;
+            WriteLine ($"{"Pass", 30}");
+         } else {
+            ForegroundColor = ConsoleColor.Red;
+            WriteLine ($"{"Fail",30}");
+         }
+         ResetColor ();
       }
    }
 
@@ -37,13 +46,13 @@ class Program {
       var (signedDigit, digitCount) = ParseSignedDigits (true);
       result += signedDigit;
       // Ensures that at least one digit is present before the decimal point
-      if (index < len && digitCount == 0) return double.NaN;
+      if (digitCount == 0) return double.NaN;
       // Checks for a decimal point
       if (index < len && input[index] == '.') {
          index++;
          var (dec, decDigits) = ParseSignedDigits (false);
-         // Ensures that the decimal point is followed by digits
          if (decDigits == 0) return double.NaN;
+         // Ensures that the decimal point is followed by digits
          result += dec / Math.Pow (10, decDigits);
       }
       // Checks for an exponent
@@ -61,9 +70,12 @@ class Program {
       // Extracts consecutive digits and returns the number along with its digit count and sign
       (int signedDigits, int count) ParseSignedDigits (bool parseSign) {
          int digits = 0, count = 0;
-         if (parseSign && index < len && (input[index] == '+' || input[index] == '-')) {
-            sign = input[index] == '-' ? -1 : 1;
-            index++;
+         if (parseSign) {
+            sign = 1;
+            if (index < len && (input[index] == '+' || input[index] == '-')) {
+               sign = input[index] == '-' ? -1 : 1;
+               index++;
+            }
          }
          while (index < len && char.IsDigit (input[index])) {
             digits = digits * 10 + (input[index] - '0');
