@@ -1,6 +1,6 @@
 ﻿// ------------------------------------------------------------------------------------------------
 // Training ~ A training program for new joinees at Metamation, Batch- July 2026.
-// Copyright (c) Metamation India.
+// Copyright (c) Trumpf Metamation India.
 // ------------------------------------------------------------------------------------------------
 // Program.cs
 // Program to convert string to Double
@@ -10,73 +10,68 @@ using static System.Console;
 
 #region Program -----------------------------------------------------------------------------------
 class Program {
-   #region Methods --------------------------------------------------
    static void Main () {
-      //string[] testCases = ["10.54e23.4e3", "-1.546234e-4", "0", "0.0", "12345", "0.00000325", "10.54e2", "1.5e2.5", "1.e3", "1.e+3",
-      //   "12.54e3.", "12.", "12.e1", ".325", " +625 ", "6.25e0", "6.0e0", "6.25e-1", "+6.25e1", "*6.25", "10.625","15a1", "1.567*2", "+-12", "12.-5", ".e1", "-0.325", "  12.456    "];
-      //foreach (string testCase in testCases) {
-      //   double customValue = DoubleParse (testCase.Trim ());
-      //   WriteLine ($"input result: {testCase}\ncustom result: {customValue}");
-      //   double.TryParse (testCase, out double result);
-      //   WriteLine ($"original value: {result}");
-      //}
-      //Write ("enter a number: ");
-      string input = "1 3";
-      if (input == null) {
-         WriteLine ("Input string is null");
-         return;
+      string[] testCases = ["10.54e23.4e3", "-1.546234e-4", "0", "0.0", "12345", "0.00000325",
+         "10.54e2", "1.5e2.5", "1.e3", "1.e+3", "12.54e3.", "12.", "12.e1", ".325", " +625 ",
+         "6.25e0", "6.0e0", "6.25e-1", "+6.25e1", "*6.25", "10.625","15a1", "1.567*2", "+-12",
+         "12.-5", ".e1", "-0.325", "  12.456    ", "12e1000", "-4.231", "e5"];
+      WriteLine ($"{"Input",15} {"CustomValue",30} {"Original Value",30}");
+      foreach (string testCase in testCases) {
+         double customValue = DoubleParse (testCase);
+         double originalValue = double.TryParse (testCase, out double val) ? val : double.NaN;
+         Write ($"{testCase,15}");
+         Write ($"{customValue,30}");
+         WriteLine ($"{originalValue,30}");
       }
-      double customValue = DoubleParse (input.Trim ());
-      if (double.IsNaN (customValue)) WriteLine ("Invalid Number");
-      else WriteLine ($"Custom Value: {customValue}");
-      double.TryParse (input, out double originalValue);
-      WriteLine ($"Original Value: {originalValue}");
    }
 
+   #region Implementation -------------------------------------------
+   // Parses the input string and returns a double value.
    static double DoubleParse (string input) {
+      input = input.Trim ();
+      int index = 0, len = input.Length, sign = 1;
+      // Validates that the input is not empty
+      if (len == 0) return double.NaN;
+      // Handles the double starting with '+' or '-'
       double result = 0;
-      int index = 0, sign = 1, digitCount = 0, len = input.Length;
-      if (index < len && (input[index] == '+' || input[index] == '-')) {
-         if (input[index] == '-') sign = -1;
-         index++;
-      }
-      while (index < len && char.IsDigit (input[index])) {
-         result = (input[index] - '0') + result * 10;
-         digitCount++;
-         index++;
-      }
+      var (signedDigit, digitCount) = ParseSignedDigits (true);
+      result += signedDigit;
+      // Ensures that at least one digit is present before the decimal point
       if (index < len && digitCount == 0) return double.NaN;
+      // Checks for a decimal point
       if (index < len && input[index] == '.') {
-         int decDigits = 0;
-         int dec = 0;
          index++;
-         while (index < len && char.IsDigit (input[index])) {
-            dec = dec * 10 + (input[index] - '0');
-            decDigits++;
-            index++;
-         }
+         var (dec, decDigits) = ParseSignedDigits (false);
+         // Ensures that the decimal point is followed by digits
          if (decDigits == 0) return double.NaN;
          result += dec / Math.Pow (10, decDigits);
       }
+      // Checks for an exponent
       if (index < len && (input[index] == 'E' || input[index] == 'e')) {
          index++;
-         int expo = 0, expoSign = 1, expoDigits = 0;
-         if (index < len && (input[index] == '+' || input[index] == '-')) {
-            if (input[index] == '-') expoSign = -1;
+         var (expo, expoDigits) = ParseSignedDigits (true);
+         // Ensures that the exponent contains digits
+         if (expoDigits == 0) return double.NaN;
+         result *= Math.Pow (10, expo);
+      }
+      // Rejects the input when unprocessed characters remain
+      if (index < len) return double.NaN;
+      return result;
+
+      // Extracts consecutive digits and returns the number along with its digit count and sign
+      (int signedDigits, int count) ParseSignedDigits (bool parseSign) {
+         int digits = 0, count = 0;
+         if (parseSign && index < len && (input[index] == '+' || input[index] == '-')) {
+            sign = input[index] == '-' ? -1 : 1;
             index++;
          }
          while (index < len && char.IsDigit (input[index])) {
-            expo = expo * 10 + (input[index] - '0');
-            expoDigits++;
+            digits = digits * 10 + (input[index] - '0');
+            count++;
             index++;
          }
-         if (expoDigits == 0) return double.NaN;
-         double power = Math.Pow (10, expo);
-         result = expoSign == 1 ? result * power : result / power;
+         return (digits * sign, count);
       }
-      if (index < len) return double.NaN;
-      result *= sign;
-      return result;
    }
    #endregion
 }
