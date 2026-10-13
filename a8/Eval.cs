@@ -12,9 +12,9 @@ class Evaluator () {
          tokens.Add (token);
       }
       // Check if this is a variable assignment
-      TVariable? var = null;
+      TVariable? tVar = null;
       if (tokens.Count > 1 && tokens[0] is TVariable tvar && tokens[1] is TOpBinary bin && bin.Op == '=') {
-         var = tvar;
+         tVar = tvar;
          tokens.RemoveRange (0, 2);
       }
 
@@ -24,7 +24,7 @@ class Evaluator () {
       if (mOperators.Count > 0) Error ("Too many operators");
       if (mOperands.Count > 1) Error ("Too many operands");
       double f = mOperands.Pop ();
-      if(var != null) mVariables[var.Name] = f;
+      if(tVar != null) mVariables[tVar.Name] = f;
       return f;
    }
 
