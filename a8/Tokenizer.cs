@@ -1,7 +1,7 @@
 ﻿namespace Eval;
 
 class Tokenizer {
-   public Tokenizer (Evaluator eval,string input) {
+   public Tokenizer (Evaluator eval, string input) {
       mText = input;
       mN = 0;
       mEval = eval;
@@ -9,12 +9,18 @@ class Tokenizer {
    readonly string mText;        // The input text we're parsing through
    readonly Evaluator mEval;     // The evaluator that owns this
    int mN;                       // Position within the text
+   Token? mPrevToken;
 
-   public Token GetNext () {
-      while(mN < mText.Length) {
+   public Token GetNext () => mPrevToken = PrevToken ();
+
+   Token PrevToken () {
+      while (mN < mText.Length) {
          char c = mText[mN++];
          switch (c) {
-            case '+' or '-' or '*' or '/' or '^' or '=': return new TOpBinary (c);
+            case '+' or '-':
+               if (mPrevToken is null or TPunctuation { Punct: '(' }) return new TOpUnary (mEval, c);
+               else return new TOpBinary (mEval, c);
+            case '*' or '/' or '^' or '=': return new TOpBinary (mEval, c);
             case ' ': continue;
             case >= '0' and <= '9': return GetLiteral ();
             case '(' or ')': return new TPunctuation (c);
@@ -25,9 +31,10 @@ class Tokenizer {
       return new TEnd ();
    }
 
+
    Token GetLiteral () {
       int start = mN - 1;
-      while(mN < mText.Length) {
+      while (mN < mText.Length) {
          char ch = mText[mN++];
          if (!(char.IsDigit (ch) || ch == '.')) { mN--; break; }
       }
@@ -40,10 +47,10 @@ class Tokenizer {
       int start = mN - 1;
       while (mN < mText.Length) {
          char ch = mText[mN++];
-         if (!(char.IsDigit (ch) || char.IsLetter(ch))) { mN--; break; }
+         if (!(char.IsDigit (ch) || char.IsLetter (ch))) { mN--; break; }
       }
       string identifier = mText[start..mN];
-      if (mFuncs.Contains (identifier)) return new TOpFunc (identifier);
+      if (mFuncs.Contains (identifier)) return new TOpFunc (mEval, identifier);
       else return new TVariable (mEval, identifier);
    }
    readonly string[] mFuncs = { "sin", "cos", "tan", "sqrt", "log", "exp", "asin", "acos", "atan" };

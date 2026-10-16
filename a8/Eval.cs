@@ -20,7 +20,7 @@ class Evaluator () {
 
       foreach (var token in tokens) Process (token);
       while (mOperators.Count > 0) ApplyOperator ();
-      if (mBasePriority != 0) Error ("Mismatched paranthesis");
+      if (BasePriority != 0) Error ("Mismatched paranthesis");
       if (mOperators.Count > 0) Error ("Too many operators");
       if (mOperands.Count > 1) Error ("Too many operands");
       double f = mOperands.Pop ();
@@ -30,6 +30,13 @@ class Evaluator () {
 
    void ApplyOperator () {
       var op = mOperators.Pop();
+      if(op is TOpUnary uni) {
+         if (mOperands.Count == 0) mOperands.Push(uni.Apply(1));
+         else {
+            double f = mOperands.Pop ();
+            mOperands.Push (uni.Apply (f));
+         }
+      }
       if(op is TOpBinary bin) {
          if (mOperands.Count < 2) Error ("Too few operands");
          double f1 = mOperands.Pop(), f2 = mOperands.Pop();
@@ -41,36 +48,35 @@ class Evaluator () {
          mOperands.Push (func.Apply (f));
       }
    }
-   public void Process(Token token) {
+   void Process(Token token) {
       switch (token) {
          case TNumber num:
             mOperands.Push (num.Value);
             break;
          case TOperator op:
-            op.FinalPriority = op.Priority + mBasePriority;
+            op.FinalPriority = op.Priority + BasePriority;
             while (!OkToPush (op)) ApplyOperator ();
             mOperators.Push (op);
             break;
          case TPunctuation p:
-            if (p.Punct == '(') mBasePriority += 10;
-            else if(p.Punct == ')') mBasePriority -= 10;
+            BasePriority += p.Punct == '(' ? 10 : -10;
             break;
          default: Error($"Unknown token: {token}"); break;
       }
    }
-   int mBasePriority = 0;
+   public int BasePriority { get; private set; }
 
    void Reset () {
       mOperands.Clear ();
       mOperators.Clear ();
-      mBasePriority = 0;
+      BasePriority = 0;
    }
 
    void Error (string s) => throw new EvalException (s);
    public bool OkToPush(TOperator op) {
       if(mOperators.Count == 0) return true;
       TOperator prev = mOperators.Peek ();
-      return prev.FinalPriority <= op.FinalPriority;
+      return prev.FinalPriority < op.FinalPriority;
    }
 
    public double GetVariable(string name) {
@@ -78,6 +84,7 @@ class Evaluator () {
       Error ($"Unknown variable {name}");
       return 0;
    }
+
    Stack<double> mOperands = new ();
    Stack<TOperator> mOperators = new ();
    Dictionary<string, double> mVariables = [];

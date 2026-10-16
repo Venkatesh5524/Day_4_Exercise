@@ -1,6 +1,16 @@
-﻿namespace Eval;
+﻿// ------------------------------------------------------------------------------------------------
+// Training ~ A training program for new joinees at Metamation, Batch - July 2026.
+// Copyright (c) TRUMPF Metamation India.
+// ------------------------------------------------------------------------------------------------
+// Program.cs
+// Entry point to execute predefined test cases and evaluate interactive user input.
+// ------------------------------------------------------------------------------------------------
 
+namespace Eval;
+
+#region Class Program -----------------------------------------------------------------------------
 class Program () {
+   #region Method ---------------------------------------------------
    static void Main () {
       var evaluate = new Evaluator ();
       for (; ; ) {
@@ -19,4 +29,6 @@ class Program () {
          Console.ResetColor ();
       }
    }
+   #endregion
 }
+#endregion

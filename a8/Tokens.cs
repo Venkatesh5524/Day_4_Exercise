@@ -1,44 +1,86 @@
-﻿
+﻿namespace Eval;
 
-namespace Eval;
-
+#region Class Token -------------------------------------------------------------------------------
 class Token { }
+#endregion
 
+#region Class TNumber -----------------------------------------------------------------------------
 abstract class TNumber : Token {
-   public abstract double Value {  get;}
+   #region Method ---------------------------------------------------
+   public abstract double Value { get; }
+   #endregion
 }
+#endregion
 
-abstract class TOperator : Token {
-   public abstract int Priority { get;}
-   public  int FinalPriority { get;  set;}
+#region Class TOperator ---------------------------------------------------------------------------
+abstract class TOperator (Evaluator eval) : Token {
+   #region Properties -----------------------------------------------
+   public abstract int Priority { get; }
+   public int FinalPriority { get; set; }
+   #endregion
+
+   #region Field ----------------------------------------------------
+   readonly protected Evaluator mEval = eval;
+   #endregion
 }
-class TLiteral : TNumber {
-   public TLiteral(double value) => mValue = value;
+#endregion
+
+#region Class TLiteral ----------------------------------------------------------------------------
+class TLiteral (double value) : TNumber {
+   #region Property -------------------------------------------------
    public override double Value => mValue;
-   readonly double mValue;
+   #endregion
+
+   #region Method ---------------------------------------------------
    public override string ToString () => $"literal : {Value}";
+   #endregion
+
+   #region Field ----------------------------------------------------
+   readonly double mValue = value;
+   #endregion
 }
+#endregion
+
+#region Class TVariable ---------------------------------------------------------------------------
 class TVariable : TNumber {
-   public TVariable (Evaluator eval,string name) { mName = name; mEval = eval; }
-   public string Name => mName;
-   readonly string mName;
+   #region Constructor ----------------------------------------------
+   public TVariable (Evaluator eval, string name) => (Name, mEval) = (name, eval);
+   #endregion
+
+   #region Properties
+   public string Name { get; }
+   #endregion
+
+   #region Method ---------------------------------------------------
+   public override double Value => mEval.GetVariable (Name);
+   public override string ToString () => $"Variable : {Name}";
+   #endregion
+
+   #region Field ----------------------------------------------------
    readonly Evaluator mEval;
-   public override double Value => mEval.GetVariable(Name);
-   public override string ToString () => $"Variable : {mName}";
+   #endregion
+}
+#endregion
+
+#region Class TOpUnary ----------------------------------------------------------------------------
+class TOpUnary : TOperator {
+   #region Constructor ----------------------------------------------
+   public TOpUnary (Evaluator eval, char c) : base (eval) => Op = c;
+   #endregion
+
+   #region Pro
+   public override int Priority => 5 + mEval.BasePriority;
+   public double Apply (double num) => Op == '+' ? num : -num;
+   public char Op { get; }
+   public override string ToString () => $"Unary : {Op}";
 }
 class TOpBinary : TOperator {
-   public TOpBinary (char op) => mOp = op;
-   public override int Priority
-          => Op switch {
-            '-' => 1,
-            '+' => 2,
-            '*' => 3,
-            '/' => 4,
-            '^' => 5,
-            _ => throw new NotImplementedException (),
-         };
-   public char Op => mOp;
-   readonly char mOp;
+   public TOpBinary (Evaluator eval, char op) : base (eval) => Op = op;
+   public override int Priority => sPriority[Op] + mEval.BasePriority;
+   static Dictionary<char, int> sPriority = new () {
+      ['+'] = 1, ['-'] = 1, ['*'] = 2, ['/'] = 2, ['^'] = 3, ['='] = 4,
+   };
+   public char Op { get; }
    public override string ToString () => $"Operator : {Op}";
    public double Apply (double a, double b)
       => Op switch {
@@ -51,12 +93,11 @@ class TOpBinary : TOperator {
       };
 }
 class TOpFunc : TOperator {
-   public TOpFunc(string func) => mFunc = func;
-   public string Func => mFunc;
-   readonly string mFunc;
-   public override string ToString () => $"Function : {mFunc}";
-   public override int Priority => 6;
-   public double Apply(double f) {
+   public TOpFunc (Evaluator eval, string func) : base (eval) => Func = func;
+   public string Func { get; }
+   public override string ToString () => $"Function : {Func}";
+   public override int Priority => 6 + mEval.BasePriority;
+   public double Apply (double f) {
       return Func switch {
          "sin" => Math.Sin (D2R (f)),
          "cos" => Math.Cos (D2R (f)),
@@ -73,16 +114,17 @@ class TOpFunc : TOperator {
       double R2D (double f) => f * 180 / Math.PI;
    }
 }
-class TEnd : Token { }
+class TEnd : Token {
+   public override string ToString () => "end";
+
+}
 class TError : Token {
-   public TError(string msg) => mMessage = msg;
-   public string Message => mMessage;
-   readonly string mMessage;
+   public TError (string msg) => Message = msg;
+   public string Message { get; }
    public override string ToString () => $"Error : {Message}";
 }
 class TPunctuation : Token {
-   public TPunctuation (char p) => mP = p;
-   public char Punct => mP;
-   readonly char mP;
+   public TPunctuation (char p) => Punct = p;
+   public char Punct { get; }
    public override string ToString () => $"Punctuation : {Punct}";
 }
